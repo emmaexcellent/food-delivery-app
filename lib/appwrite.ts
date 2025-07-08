@@ -1,13 +1,18 @@
 import SignIn from "@/app/(auth)/sign-in";
-import { CreateUserParams, SignInParams } from "@/type";
-import { Account, Avatars, Client, Databases, ID, Query } from "react-native-appwrite";
+import { CreateUserParams, GetMenuParams, SignInParams } from "@/type";
+import { Account, Avatars, Client, Databases, ID, Query, Storage } from "react-native-appwrite";
 
 export const appwriteConfig = {
   endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!,
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
   platform: "com.excel.fooddelivery",
   databaseId: "68689a77000432058c49",
+  bucketId: "6869d925002b2b429e1c",
   userCollectionId: "68689a90000964e5349c",
+  categoriesCollectionId: "6869d569003d77554a22",
+  menuCollectionId: "6869d5ec00376fcd775f",
+  customizationsCollectionId: "6869d6fa000fee3b06f4",
+  menuCustomizationsCollectionId: "6869d7d80015f41fd37d",
 };
 
 export const client = new Client();
@@ -19,6 +24,7 @@ client
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const avatars = new Avatars(client);
+export const storage = new Storage(client);
 
 
 export const createUser = async ({email, password, name}: CreateUserParams) => {
@@ -79,4 +85,37 @@ export const getCurrentUser = async () => {
   } catch (error) {
     throw new Error(error as string) 
   }
+}
+
+export const getMenu = async ({ category, query }: GetMenuParams) => {
+  try {
+    const queries: string[] = [];
+    if(category) queries.push(Query.equal('categories', category))
+    if(query) queries.push(Query.search('name', query));
+
+    const menus = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.menuCollectionId,
+      queries
+    )
+
+    return menus.documents;
+    
+  } catch (error) {
+    throw new Error(error as string)    
+  }
+}
+
+export const getCategories = async () => {
+  try {
+    const categories = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.categoriesCollectionId
+    )
+
+    return categories.documents;
+    
+  } catch (error) {
+    throw new Error(error as string)    
+  }  
 }
